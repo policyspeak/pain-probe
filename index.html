@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Pain Probe — PolicySpeak</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      font-size: 16px;
+      -webkit-text-size-adjust: 100%;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f5f5f5;
+      color: #333;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 1.5rem 1rem;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+      max-width: 560px;
+      width: 100%;
+      padding: 2rem 1.5rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Logo */
+    .logo {
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .logo-text {
+      font-family: Georgia, serif;
+      font-size: 1.5rem;
+      font-weight: 700;
+    }
+
+    .logo-policy {
+      color: #2f4f4f;
+    }
+
+    .logo-speak {
+      color: #ff7f7f;
+    }
+
+    /* Progress Bar */
+    .progress-bar {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 2rem;
+    }
+
+    .progress-segment {
+      flex: 1;
+      height: 4px;
+      border-radius: 2px;
+      background: #e0e0e0;
+      transition: background 0.3s ease;
+    }
+
+    .progress-segment.active {
+      background: #2f4f4f;
+    }
+
+    /* Screen container */
+    .screens-wrapper {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .screen {
+      display: none;
+      opacity: 0;
+      transform: translateX(30px);
+      transition: opacity 0.35s ease, transform 0.35s ease;
+    }
+
+    .screen.active {
+      display: block;
+    }
+
+    .screen.visible {
+      opacity: 1;
+      transform: translateX(0);
+    }
+
+    .screen.exiting {
+      opacity: 0;
+      transform: translateX(-30px);
+    }
+
+    /* Typography */
+    .screen-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #2f4f4f;
+      margin-bottom: 1.25rem;
+      line-height: 1.35;
+    }
+
+    .screen-subtitle {
+      font-size: 0.9rem;
+      color: #666;
+      margin-bottom: 1.25rem;
+      line-height: 1.5;
+    }
+
+    /* Pain point cards (checkboxes) */
+    .pain-cards {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .pain-card {
+      display: flex;
+      align-items: center;
+      min-height: 48px;
+      padding: 0.75rem 1rem;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      background: #fff;
+      color: #5d5d5d;
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      user-select: none;
+      -webkit-user-select: none;
+      transition: all 0.2s ease;
+      -webkit-tap-highlight-color: transparent;
+      position: relative;
+    }
+
+    .pain-card:hover {
+      border-color: #2f4f4f;
+    }
+
+    .pain-card.selected {
+      background: #2f4f4f;
+      color: #fff;
+      border-color: #2f4f4f;
+      transform: scale(1.015);
+    }
+
+    .pain-card .check-icon {
+      width: 20px;
+      height: 20px;
+      min-width: 20px;
+      border-radius: 4px;
+      border: 2px solid #ccc;
+      margin-right: 0.75rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+    }
+
+    .pain-card.selected .check-icon {
+      border-color: #fff;
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    .pain-card.selected .check-icon svg {
+      opacity: 1;
+    }
+
+    .pain-card .check-icon svg {
+      opacity: 0;
+      transition: opacity 0.15s ease;
+      width: 14px;
+      height: 14px;
+    }
+
+    .pain-card.other-card {
+      border-style: dashed;
+      border-width: 1.5px;
+      color: #888;
+    }
+
+    .pain-card.other-card.selected {
+      border-style: solid;
+      color: #fff;
+    }
+
+    .pain-card .plus-icon {
+      width: 20px;
+      height: 20px;
+      min-width: 20px;
+      margin-right: 0.75rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #888;
+      transition: color 0.2s ease;
+    }
+
+    .pain-card.other-card.selected .plus-icon {
+      color: #fff;
+    }
+
+    .other-input-wrapper {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease, margin 0.3s ease;
+      margin-bottom: 0;
+    }
+
+    .other-input-wrapper.expanded {
+      max-height: 80px;
+      margin-bottom: 0.5rem;
+    }
+
+    .other-input {
+      width: 100%;
+      padding: 0.65rem 1rem;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.875rem;
+      color: #333;
+      outline: none;
+      transition: border-color 0.2s ease;
+      margin-top: 0.5rem;
+    }
+
+    .other-input:focus {
+      border-color: #2f4f4f;
+    }
+
+    /* Textarea */
+    .form-textarea {
+      width: 100%;
+      min-height: 120px;
+      padding: 0.875rem 1rem;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.9rem;
+      color: #333;
+      resize: vertical;
+      outline: none;
+      transition: border-color 0.2s ease;
+      margin-bottom: 1.5rem;
+      line-height: 1.5;
+    }
+
+    .form-textarea:focus {
+      border-color: #2f4f4f;
+    }
+
+    .form-textarea::placeholder {
+      color: #aaa;
+    }
+
+    /* Text inputs */
+    .form-group {
+      margin-bottom: 1rem;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 0.35rem;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.9rem;
+      color: #333;
+      outline: none;
+      transition: border-color 0.2s ease;
+      min-height: 44px;
+    }
+
+    .form-input:focus {
+      border-color: #2f4f4f;
+    }
+
+    .form-input::placeholder {
+      color: #bbb;
+    }
+
+    .privacy-note {
+      font-size: 0.78rem;
+      color: #999;
+      line-height: 1.5;
+      margin-top: 0.75rem;
+      margin-bottom: 1.5rem;
+    }
+
+    /* Buttons */
+    .btn-primary {
+      display: block;
+      width: 100%;
+      padding: 0.875rem 1rem;
+      border: none;
+      border-radius: 8px;
+      background: #2f4f4f;
+      color: #fff;
+      font-family: 'Inter', sans-serif;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s ease, opacity 0.2s ease, transform 0.1s ease;
+      min-height: 48px;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: #3a5e5e;
+    }
+
+    .btn-primary:active:not(:disabled) {
+      transform: scale(0.985);
+    }
+
+    .btn-primary:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .btn-primary.loading {
+      opacity: 0.7;
+      cursor: wait;
+    }
+
+    .skip-link {
+      display: block;
+      text-align: center;
+      margin-top: 0.75rem;
+      font-size: 0.875rem;
+      color: #999;
+      text-decoration: none;
+      cursor: pointer;
+      padding: 0.5rem;
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      -webkit-tap-highlight-color: transparent;
+      transition: color 0.2s ease;
+    }
+
+    .skip-link:hover {
+      color: #666;
+    }
+
+    /* Error banner */
+    .error-banner {
+      background: #fff0f0;
+      color: #c03030;
+      font-size: 0.85rem;
+      font-weight: 500;
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+      display: none;
+      line-height: 1.4;
+    }
+
+    .error-banner.show {
+      display: block;
+    }
+
+    /* Thank you screen */
+    .thank-you {
+      text-align: center;
+      padding: 2rem 0 1rem;
+    }
+
+    .thank-you .checkmark-circle {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: #2f4f4f;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .thank-you .checkmark-circle svg {
+      width: 32px;
+      height: 32px;
+      stroke: #fff;
+      stroke-width: 3;
+      fill: none;
+    }
+
+    .thank-you p {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #2f4f4f;
+      line-height: 1.5;
+    }
+
+    /* Spinner inside submit button */
+    .spinner {
+      display: inline-block;
+      width: 18px;
+      height: 18px;
+      border: 2.5px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: #fff;
+      animation: spin 0.7s linear infinite;
+      vertical-align: middle;
+      margin-right: 0.5rem;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Responsive tweaks */
+    @media (max-width: 400px) {
+      body {
+        padding: 1rem 0.5rem;
+      }
+      .card {
+        padding: 1.5rem 1.15rem;
+      }
+      .screen-title {
+        font-size: 1.125rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <!-- Logo -->
+    <div class="logo">
+      <span class="logo-text logo-policy">Policy</span><span class="logo-text logo-speak">Speak</span>
+    </div>
+
+    <!-- Progress Bar (hidden on thank-you screen) -->
+    <div class="progress-bar" id="progressBar">
+      <div class="progress-segment active" data-step="1"></div>
+      <div class="progress-segment" data-step="2"></div>
+      <div class="progress-segment" data-step="3"></div>
+    </div>
+
+    <!-- Error Banner -->
+    <div class="error-banner" id="errorBanner"></div>
+
+    <!-- Screen 1: Pain Points -->
+    <div class="screen active" id="screen1">
+      <h1 class="screen-title">Which of these slow you down?</h1>
+      <div class="pain-cards" id="painCards">
+        <div class="pain-card" data-value="text_tracking" role="checkbox" aria-checked="false" tabindex="0">
+          <span class="check-icon">
+            <svg viewBox="0 0 14 14" fill="none"><polyline points="2,7 6,11 12,3" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+          Tracking changes across legislative text versions
+        </div>
+        <div class="pain-card" data-value="committee_monitoring" role="checkbox" aria-checked="false" tabindex="0">
+          <span class="check-icon">
+            <svg viewBox="0 0 14 14" fill="none"><polyline points="2,7 6,11 12,3" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+          Monitoring committee agendas and schedules
+        </div>
+        <div class="pain-card" data-value="voting_crossref" role="checkbox" aria-checked="false" tabindex="0">
+          <span class="check-icon">
+            <svg viewBox="0 0 14 14" fill="none"><polyline points="2,7 6,11 12,3" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+          Cross-referencing voting records or positions
+        </div>
+        <div class="pain-card" data-value="consultation_discovery" role="checkbox" aria-checked="false" tabindex="0">
+          <span class="check-icon">
+            <svg viewBox="0 0 14 14" fill="none"><polyline points="2,7 6,11 12,3" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+          Finding new consultations or feedback windows
+        </div>
+        <div class="pain-card" data-value="briefing_compilation" role="checkbox" aria-checked="false" tabindex="0">
+          <span class="check-icon">
+            <svg viewBox="0 0 14 14" fill="none"><polyline points="2,7 6,11 12,3" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+          Compiling briefing notes from multiple sources
+        </div>
+        <div class="pain-card" data-value="report_formatting" role="checkbox" aria-checked="false" tabindex="0">
+          <span class="check-icon">
+            <svg viewBox="0 0 14 14" fill="none"><polyline points="2,7 6,11 12,3" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+          Formatting reports or presentations
+        </div>
+        <div class="pain-card" data-value="stakeholder_db" role="checkbox" aria-checked="false" tabindex="0">
+          <span class="check-icon">
+            <svg viewBox="0 0 14 14" fill="none"><polyline points="2,7 6,11 12,3" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+          Keeping stakeholder databases up to date
+        </div>
+        <div class="pain-card" data-value="eurlex_monitoring" role="checkbox" aria-checked="false" tabindex="0">
+          <span class="check-icon">
+            <svg viewBox="0 0 14 14" fill="none"><polyline points="2,7 6,11 12,3" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+          Monitoring EUR-Lex or the Official Journal
+        </div>
+        <div class="pain-card" data-value="transcript_summarization" role="checkbox" aria-checked="false" tabindex="0">
+          <span class="check-icon">
+            <svg viewBox="0 0 14 14" fill="none"><polyline points="2,7 6,11 12,3" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+          Summarizing transcripts or legal texts
+        </div>
+        <div class="pain-card" data-value="implementation_tracking" role="checkbox" aria-checked="false" tabindex="0">
+          <span class="check-icon">
+            <svg viewBox="0 0 14 14" fill="none"><polyline points="2,7 6,11 12,3" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+          Tracking implementation timelines across member states
+        </div>
+        <div class="pain-card other-card" data-value="other" role="checkbox" aria-checked="false" tabindex="0" id="otherCard">
+          <span class="plus-icon">+</span>
+          Something else
+        </div>
+      </div>
+      <div class="other-input-wrapper" id="otherInputWrapper">
+        <input type="text" class="other-input" id="otherInput" placeholder="What else slows you down?" maxlength="200" autocomplete="off">
+      </div>
+      <button class="btn-primary" id="btnNext1" disabled>Next</button>
+    </div>
+
+    <!-- Screen 2: Wishlist Tool -->
+    <div class="screen" id="screen2">
+      <h1 class="screen-title">If we could build you one tool, what would it do?</h1>
+      <textarea class="form-textarea" id="wishlistInput" placeholder="Dream big — no constraints." maxlength="2000"></textarea>
+      <button class="btn-primary" id="btnNext2">Next</button>
+      <a class="skip-link" id="skipScreen2" role="button" tabindex="0">Skip</a>
+    </div>
+
+    <!-- Screen 3: Contact Info -->
+    <div class="screen" id="screen3">
+      <h1 class="screen-title">Stay in touch?</h1>
+      <p class="screen-subtitle">Leave your details if you'd like to hear what we build.</p>
+      <div class="form-group">
+        <label for="nameInput">Name</label>
+        <input type="text" class="form-input" id="nameInput" placeholder="Your name" autocomplete="name" maxlength="200">
+      </div>
+      <div class="form-group">
+        <label for="emailInput">Email</label>
+        <input type="email" class="form-input" id="emailInput" placeholder="you@example.com" autocomplete="email" maxlength="320">
+      </div>
+      <div class="form-group">
+        <label for="orgInput">Organization</label>
+        <input type="text" class="form-input" id="orgInput" placeholder="Your organization" autocomplete="organization" maxlength="200">
+      </div>
+      <p class="privacy-note">We'll only use this to follow up on what matters to you. We don't share your data.</p>
+      <button class="btn-primary" id="btnSubmit">Submit</button>
+      <a class="skip-link" id="skipScreen3" role="button" tabindex="0">Skip</a>
+    </div>
+
+    <!-- Screen 4: Thank You -->
+    <div class="screen" id="screen4">
+      <div class="thank-you">
+        <div class="checkmark-circle">
+          <svg viewBox="0 0 32 32" fill="none">
+            <polyline points="8,17 14,23 24,10" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <p>Got it — your input shapes what we build next.</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      'use strict';
+
+      // ── Config ──
+      var WEBHOOK_URL = 'https://n8n.plat-dev.eu/webhook/pp-collect-a7f3b2e1';
+      var API_KEY = 'E4A7C2D1-9B3F-4E8A-B5C6-7D2E1F0A3B9C';
+
+      // ── URL params ──
+      var params = new URLSearchParams(window.location.search);
+      var source = params.get('src') || 'direct';
+      var prefillName = params.get('name') || '';
+      var prefillEmail = params.get('email') || '';
+      var prefillOrg = params.get('org') || '';
+
+      // ── State ──
+      var currentScreen = 1;
+      var selectedPains = {};
+
+      // ── DOM refs ──
+      var screens = {
+        1: document.getElementById('screen1'),
+        2: document.getElementById('screen2'),
+        3: document.getElementById('screen3'),
+        4: document.getElementById('screen4')
+      };
+      var progressBar = document.getElementById('progressBar');
+      var progressSegments = progressBar.querySelectorAll('.progress-segment');
+      var errorBanner = document.getElementById('errorBanner');
+
+      var painCards = document.querySelectorAll('.pain-card');
+      var otherCard = document.getElementById('otherCard');
+      var otherInputWrapper = document.getElementById('otherInputWrapper');
+      var otherInput = document.getElementById('otherInput');
+      var btnNext1 = document.getElementById('btnNext1');
+
+      var wishlistInput = document.getElementById('wishlistInput');
+      var btnNext2 = document.getElementById('btnNext2');
+      var skipScreen2 = document.getElementById('skipScreen2');
+
+      var nameInput = document.getElementById('nameInput');
+      var emailInput = document.getElementById('emailInput');
+      var orgInput = document.getElementById('orgInput');
+      var btnSubmit = document.getElementById('btnSubmit');
+      var skipScreen3 = document.getElementById('skipScreen3');
+
+      // ── Pre-fill contact fields ──
+      if (prefillName) nameInput.value = prefillName;
+      if (prefillEmail) emailInput.value = prefillEmail;
+      if (prefillOrg) orgInput.value = prefillOrg;
+
+      // ── Initialize first screen ──
+      requestAnimationFrame(function () {
+        screens[1].classList.add('visible');
+      });
+
+      // ── Pain card selection ──
+      painCards.forEach(function (card) {
+        function toggle() {
+          var val = card.dataset.value;
+          if (selectedPains[val]) {
+            delete selectedPains[val];
+            card.classList.remove('selected');
+            card.setAttribute('aria-checked', 'false');
+          } else {
+            selectedPains[val] = true;
+            card.classList.add('selected');
+            card.setAttribute('aria-checked', 'true');
+          }
+
+          // Toggle other input
+          if (val === 'other') {
+            if (selectedPains.other) {
+              otherInputWrapper.classList.add('expanded');
+              setTimeout(function () { otherInput.focus(); }, 300);
+            } else {
+              otherInputWrapper.classList.remove('expanded');
+              otherInput.value = '';
+            }
+          }
+
+          updateNext1State();
+        }
+
+        card.addEventListener('click', toggle);
+        card.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            toggle();
+          }
+        });
+      });
+
+      function updateNext1State() {
+        var hasSelection = Object.keys(selectedPains).length > 0;
+        btnNext1.disabled = !hasSelection;
+      }
+
+      // ── Screen transitions ──
+      function goToScreen(target) {
+        hideError();
+        var current = screens[currentScreen];
+        var next = screens[target];
+
+        // Animate out
+        current.classList.remove('visible');
+        current.classList.add('exiting');
+
+        setTimeout(function () {
+          current.classList.remove('active', 'exiting');
+          next.classList.add('active');
+
+          // Force reflow before adding visible class
+          void next.offsetWidth;
+
+          requestAnimationFrame(function () {
+            next.classList.add('visible');
+          });
+
+          currentScreen = target;
+          updateProgress();
+        }, 250);
+      }
+
+      function updateProgress() {
+        if (currentScreen === 4) {
+          progressBar.style.display = 'none';
+          return;
+        }
+        progressBar.style.display = 'flex';
+        progressSegments.forEach(function (seg) {
+          var step = parseInt(seg.dataset.step, 10);
+          if (step <= currentScreen) {
+            seg.classList.add('active');
+          } else {
+            seg.classList.remove('active');
+          }
+        });
+      }
+
+      // ── Error handling ──
+      function showError(msg) {
+        errorBanner.textContent = msg;
+        errorBanner.classList.add('show');
+      }
+
+      function hideError() {
+        errorBanner.classList.remove('show');
+        errorBanner.textContent = '';
+      }
+
+      // ── Navigation handlers ──
+      btnNext1.addEventListener('click', function () {
+        if (Object.keys(selectedPains).length === 0) {
+          showError('Please select at least one item to continue.');
+          return;
+        }
+        hideError();
+        goToScreen(2);
+      });
+
+      btnNext2.addEventListener('click', function () {
+        goToScreen(3);
+      });
+
+      skipScreen2.addEventListener('click', function () {
+        wishlistInput.value = '';
+        goToScreen(3);
+      });
+
+      skipScreen2.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          wishlistInput.value = '';
+          goToScreen(3);
+        }
+      });
+
+      // ── Submission ──
+      function buildPayload() {
+        var painChecks = Object.keys(selectedPains).filter(function (k) {
+          return k !== 'other';
+        });
+
+        var painOther = null;
+        if (selectedPains.other && otherInput.value.trim()) {
+          painOther = otherInput.value.trim();
+        }
+
+        var wishlist = wishlistInput.value.trim() || null;
+        var name = nameInput.value.trim() || null;
+        var email = emailInput.value.trim() || null;
+        var organization = orgInput.value.trim() || null;
+
+        return {
+          pain_checks: painChecks,
+          pain_other: painOther,
+          wishlist_tool: wishlist,
+          name: name,
+          email: email,
+          organization: organization,
+          source: source
+        };
+      }
+
+      function submitForm() {
+        hideError();
+        var payload = buildPayload();
+
+        btnSubmit.disabled = true;
+        btnSubmit.classList.add('loading');
+        btnSubmit.innerHTML = '<span class="spinner"></span>Submitting\u2026';
+
+        fetch(WEBHOOK_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-PainProbe-Key': API_KEY
+          },
+          body: JSON.stringify(payload)
+        })
+          .then(function (response) {
+            if (!response.ok) {
+              throw new Error('Server responded with ' + response.status);
+            }
+            goToScreen(4);
+          })
+          .catch(function () {
+            showError('Something went wrong. Please try again.');
+            btnSubmit.disabled = false;
+            btnSubmit.classList.remove('loading');
+            btnSubmit.textContent = 'Submit';
+          });
+      }
+
+      btnSubmit.addEventListener('click', function () {
+        submitForm();
+      });
+
+      skipScreen3.addEventListener('click', function () {
+        nameInput.value = '';
+        emailInput.value = '';
+        orgInput.value = '';
+        submitForm();
+      });
+
+      skipScreen3.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          nameInput.value = '';
+          emailInput.value = '';
+          orgInput.value = '';
+          submitForm();
+        }
+      });
+    })();
+  </script>
+</body>
+</html>
